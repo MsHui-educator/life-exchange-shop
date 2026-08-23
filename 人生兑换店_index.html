@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>人生兑换店</title>
+<style>
+  :root{
+    --ink:#14152B;
+    --paper:#FBF7EE;
+    --paper-dim:#F0E9D8;
+    --gold:#E8A33D;
+    --gold-deep:#C87F1F;
+    --teal:#3F9C90;
+    --red:#C6503F;
+    --line:#D8CDB0;
+    --text:#1F2340;
+    --text-soft:#5B5A72;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(232,163,61,0.10), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(63,156,144,0.12), transparent 40%);
+    min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+  }
+  .stage{
+    width:100%; max-width:480px; min-height:100vh; background:var(--paper);
+    position:relative; display:flex; flex-direction:column; box-shadow:0 0 60px rgba(0,0,0,0.45);
+  }
+  .display{ font-family:Georgia,"Noto Serif SC","Songti SC",serif; font-weight:700; letter-spacing:0.02em; }
+  .eyebrow{ font-size:11px; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold-deep); font-weight:700; }
+
+  .balancebar{
+    position:sticky; top:0; z-index:20; background:var(--ink); color:var(--paper);
+    padding:10px 18px; display:flex; align-items:center; justify-content:space-between;
+    font-family:'Courier New',monospace; border-bottom:3px dashed var(--gold);
+  }
+  .balancebar .lbl{font-size:10px; letter-spacing:0.18em; color:#B9B7CC; text-transform:uppercase;}
+  .balancebar .num{font-size:22px; font-weight:700; color:var(--gold);}
+  .balancebar.hidden{display:none;}
+
+  .screen{ flex:1; padding:28px 22px 110px; display:none; animation:fadein 0.35s ease; }
+  .screen.active{display:block;}
+  @keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  h1.title{ font-size:34px; line-height:1.15; margin:6px 0 4px; }
+  p.sub{color:var(--text-soft); font-size:14.5px; line-height:1.6; margin:0 0 22px;}
+  .stamp{
+    display:inline-block; border:2px solid var(--gold-deep); color:var(--gold-deep);
+    padding:3px 10px; font-size:11px; letter-spacing:0.2em; transform:rotate(-3deg);
+    font-weight:700; text-transform:uppercase;
+  }
+
+  textarea, input[type=text]{
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:12px;
+    font-size:14.5px; font-family:inherit; resize:vertical; background:#fff; color:var(--text);
+  }
+  label.flabel{ display:block; font-size:12.5px; font-weight:700; color:var(--text-soft); margin:18px 0 6px; }
+  label.flabel:first-of-type{margin-top:0;}
+
+  .opt{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:16px 14px; margin-bottom:10px; font-size:15px; color:var(--text);
+    cursor:pointer; transition:border-color .15s, transform .1s, background .15s;
+  }
+  .opt:active{transform:scale(0.98);}
+  .opt .pts{ margin-left:auto; font-family:'Courier New',monospace; font-weight:700; color:var(--teal); white-space:nowrap; font-size:14px; }
+  .opt.selected{border-color:var(--teal); background:#F1F8F6;}
+  .opt.selected .pts{color:var(--teal);}
+  .opt.static{cursor:default;}
+
+  .mbti-row{display:flex; gap:10px; margin-bottom:12px;}
+  .mbti-btn{ flex:1; padding:16px 6px; border-radius:10px; border:1.5px solid var(--line); background:#fff; text-align:center; font-weight:700; font-size:16px; cursor:pointer; }
+  .mbti-btn.on{border-color:var(--gold-deep); background:var(--gold); color:#fff;}
+  .mbti-cap{font-size:11px; color:var(--text-soft); text-align:center; margin-bottom:4px; letter-spacing:.05em;}
+
+  .btnbar{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%; max-width:480px;
+    background:linear-gradient(to top, var(--paper) 70%, rgba(251,247,238,0));
+    padding:20px 22px 22px; display:flex; gap:10px; z-index:15;
+  }
+  .btn{ flex:1; border:none; border-radius:10px; padding:15px 10px; font-size:15.5px; font-weight:700; cursor:pointer; text-align:center; }
+  .btn-primary{background:var(--ink); color:var(--gold);}
+  .btn-primary:disabled{background:#C9C6D6; color:#fff; cursor:not-allowed;}
+  .btn-ghost{background:transparent; color:var(--text-soft); border:1.5px solid var(--line);}
+
+  .attempt-track{ display:flex; gap:6px; margin-bottom:18px; }
+  .attempt-track .pip{ flex:1; height:8px; border-radius:4px; background:var(--paper-dim); border:1px solid var(--line); }
+  .attempt-track .pip.used{ background:var(--teal); border-color:var(--teal); }
+  .stationpick{ display:grid; gap:12px; }
+  .stationcard{ background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:18px; display:flex; align-items:center; gap:14px; cursor:pointer; }
+  .stationcard .emoji{font-size:26px;}
+  .stationcard .name{font-weight:700; font-size:16px;}
+  .stationcard .tag{font-size:12.5px; color:var(--text-soft); margin-top:2px;}
+  .stationcard:active{transform:scale(0.98);}
+  .answerbox{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:22px; text-align:center; }
+  .answerbox .q{font-size:15px; color:var(--text-soft); margin-bottom:4px;}
+  .answerbox .stationname{font-size:19px; font-weight:700; margin-bottom:18px;}
+  .answerbox input{
+    width:100%; text-align:center; font-size:32px; font-family:'Courier New',monospace; font-weight:700;
+    border:2px solid var(--line); border-radius:10px; padding:12px; color:var(--ink); background:var(--paper-dim);
+  }
+  .answerbox .hint{font-size:12px; color:var(--text-soft); margin-top:10px;}
+  .quickpts{display:flex; gap:8px; margin-top:14px;}
+  .quickpts button{ flex:1; padding:10px 0; border-radius:8px; border:1.5px solid var(--line); background:#fff; font-weight:700; font-size:14px; cursor:pointer; color:var(--text); }
+  .chiprow{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff;
+    font-size:13px; font-weight:600; cursor:pointer; color:var(--text-soft);
+  }
+  .chip:active{transform:scale(0.97);}
+  select#nameSelect{
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:12px;
+    font-size:14.5px; font-family:inherit; background:#fff; color:var(--text);
+  }
+  .doneallcard{ background:#fff; border:1.5px dashed var(--gold-deep); border-radius:14px; padding:26px; text-align:center; color:var(--text-soft); }
+
+  .path-card{ border:2px solid var(--line); border-radius:14px; padding:18px; margin-bottom:12px; background:#fff; cursor:pointer; }
+  .path-card.selected{border-color:var(--gold-deep); background:#FFF8EC;}
+  .path-card.unaffordable{opacity:0.45;}
+  .path-top .icon{font-size:26px;}
+  .path-name{font-size:17px; font-weight:700; margin:6px 0 4px;}
+  .path-price{font-family:'Courier New',monospace; font-weight:700; color:var(--gold-deep); font-size:16px;}
+  .path-task{font-size:13px; color:var(--text-soft); margin-top:8px; line-height:1.5;}
+  .path-task textarea{margin-top:8px; min-height:44px; font-size:13.5px;}
+  .switchnote{font-size:12px; color:var(--teal); text-align:center; margin:-6px 0 16px;}
+
+  .tabs{display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;}
+  .tab{ flex-shrink:0; padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:13.5px; font-weight:700; cursor:pointer; color:var(--text-soft); }
+  .tab.on{background:var(--ink); color:var(--gold); border-color:var(--ink);}
+  .dream{ display:flex; align-items:center; justify-content:space-between; border:1.5px solid var(--line); border-radius:10px; padding:14px; margin-bottom:10px; background:#fff; }
+  .dream .dname{font-size:14.5px; font-weight:600; flex:1; padding-right:10px;}
+  .dream .dprice{font-family:'Courier New',monospace; font-size:13px; color:var(--text-soft); margin-right:10px;}
+  .dream button{ border:none; border-radius:20px; padding:8px 16px; font-weight:700; font-size:13px; cursor:pointer; background:var(--teal); color:#fff; }
+  .dream button.bought{background:var(--paper-dim); color:var(--text-soft);}
+  .dream button:disabled{background:var(--paper-dim); color:#B9B7CC; cursor:not-allowed;}
+  .dreamselect{
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:12px;
+    font-size:14.5px; font-family:inherit; background:#fff; color:var(--text);
+  }
+
+  .fatewrap{ margin-top:8vh; text-align:center; }
+  .fatecard{
+    width:100%; aspect-ratio:3/4; border-radius:18px; margin:0 auto 20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    background:var(--ink); border:3px dashed var(--gold); color:var(--gold);
+    font-size:15px; font-weight:700; letter-spacing:.1em; flex-direction:column; gap:10px;
+    max-width:260px;
+  }
+  .fatecard .big{font-size:44px;}
+  .fatecard.revealed{ cursor:default; border-style:solid; }
+  .fatecard.good{background:#1F3D34; border-color:var(--teal); color:#fff;}
+  .fatecard.bad{background:#3A1F22; border-color:var(--red); color:#fff;}
+  .fate-delta{font-size:34px; font-family:'Courier New',monospace; font-weight:700;}
+  .fate-text{font-size:14px; line-height:1.6; padding:0 12px;}
+  .scenario-q{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:20px; font-size:15px; line-height:1.7; margin-bottom:16px; }
+  .choice-btn{
+    width:100%; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:12px;
+    padding:16px; margin-bottom:12px; font-size:14.5px; font-weight:600; cursor:pointer; color:var(--text);
+  }
+  .choice-btn:active{transform:scale(0.98);}
+
+  /* ending */
+  .titlecard{
+    background:var(--ink); color:var(--paper); border-radius:16px; padding:26px 22px; text-align:center; margin-bottom:16px;
+  }
+  .titlecard .eyebrow{color:var(--gold);}
+  .titlecard .titlename{font-size:26px; margin:8px 0 0;}
+  .storybox, .suggestbox, .reflectbox, .numbox{
+    background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:18px; margin-bottom:14px;
+  }
+  .storybox p{margin:0; font-size:14.5px; line-height:1.9;}
+  .suggestbox .eyebrow, .storybox .eyebrow, .reflectbox .eyebrow, .numbox .eyebrow{margin-bottom:10px; display:block;}
+  .suggestbox ul{margin:0; padding-left:20px; font-size:14px; line-height:1.9;}
+  .quoteback{ background:var(--paper-dim); border-radius:10px; padding:12px 14px; font-size:13.5px; font-style:italic; margin-bottom:12px; color:var(--text-soft); }
+  .numbox{font-family:'Courier New',monospace; font-size:12.5px; color:var(--text-soft);}
+  .numbox .line{display:flex; justify-content:space-between; padding:3px 0;}
+  .numbox .total{color:var(--ink); font-weight:700; font-size:15px; border-top:1px dashed var(--line); margin-top:6px; padding-top:8px;}
+  .numbox .total.negative{color:var(--gold-deep);}
+  .negativenote{ background:#FFF8EC; border:1.5px dashed var(--gold-deep); border-radius:12px; padding:14px 16px; margin-top:12px; font-size:13.5px; line-height:1.7; color:var(--text);}
+  .submitbtn{
+    width:100%; padding:15px; border:none; border-radius:10px; background:var(--gold-deep); color:#fff;
+    font-weight:700; font-size:15px; cursor:pointer; margin-top:4px;
+  }
+  .submitbtn.done{background:var(--teal);}
+  .submit-reminder{ background:#FFF3E0; border:1.5px solid var(--gold-deep); border-radius:10px; padding:12px 14px; margin-bottom:10px; font-size:13px; line-height:1.6; color:var(--ink); text-align:center; font-weight:700; }
+  .submitted-banner{ background:#1F3D34; color:#fff; border-radius:10px; padding:14px; margin-bottom:10px; font-size:14.5px; font-weight:700; text-align:center; }
+
+  .progress{display:flex; gap:5px; margin-bottom:22px;}
+  .progress span{flex:1; height:4px; border-radius:2px; background:var(--line);}
+  .progress span.done{background:var(--gold-deep);}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="balancebar hidden" id="balancebar">
+    <div><div class="lbl">目前结余</div><div class="num" id="balanceNum">0</div></div>
+    <div style="text-align:right"><div class="lbl">阶段</div><div class="num" id="stepNum" style="font-size:14px;">－</div></div>
+  </div>
+
+  <div class="screen active" id="s-cover">
+    <div style="margin-top:12vh; text-align:center;">
+      <div class="stamp">2026 F5 升学讲座</div>
+      <h1 class="title display" style="font-size:44px; margin-top:18px;">人生<br>兑换店</h1>
+      <p class="sub" style="text-align:center;">起点不一样，但你随时可以换牌重来。</p>
+      <div style="margin-top:22px; padding:14px; border:1.5px dashed var(--gold-deep); border-radius:12px; background:#FFF8EC; text-align:left;">
+        <div class="eyebrow" style="margin-bottom:6px;">核心公式</div>
+        <div class="display" style="font-size:19px; color:var(--ink); line-height:1.4;">真正的财富 ＝<br>认知 ＋ 行动 ＋ 时机</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-intro">
+    <div class="eyebrow">开始之前</div>
+    <h1 class="title" style="font-size:26px;">先说说你自己</h1>
+    <p class="sub">游戏结束后，这些会变成你的一份小小纪录。</p>
+    <label class="flabel">你的名字</label>
+    <select id="nameSelect"></select>
+    <input type="text" id="nameOtherInput" placeholder="打上你的名字" style="display:none; margin-top:10px;">
+    <label class="flabel">你的优点（写2个）</label>
+    <input type="text" id="strengthsInput" placeholder="例如：细心、责任感强">
+    <label class="flabel">你的缺点（写2个）</label>
+    <input type="text" id="weaknessesInput" placeholder="例如：容易紧张、比较拖延">
+    <label class="flabel">你期待的人生：</label>
+    <p class="sub" style="margin-bottom:10px; font-size:13px;">还没想到也没关系，可以先点一个例子，再自己改。</p>
+    <div class="chiprow" id="goalChips" style="margin-bottom:12px;"></div>
+    <textarea id="goalInput" rows="3" placeholder="例如：想环游世界、想开一家自己的店、想有一份稳定的工作、想早点赚钱照顾家人…"></textarea>
+  </div>
+
+  <div class="screen" id="s-family">
+    <div class="progress"><span class="done"></span><span></span><span></span><span></span></div>
+    <div class="eyebrow">通行证・第一类</div>
+    <h1 class="title" style="font-size:26px;">家庭背景</h1>
+    <p class="sub">凭真实感觉选，先不用管分数。</p>
+    <div id="familyList"></div>
+  </div>
+
+  <div class="screen" id="s-academic">
+    <div class="progress"><span class="done"></span><span class="done"></span><span></span><span></span></div>
+    <div class="eyebrow">通行证・第二类</div>
+    <h1 class="title" style="font-size:26px;">自身条件</h1>
+    <p class="sub">选一张最贴近你现在状态的卡，先不用管分数。</p>
+    <div id="academicList"></div>
+  </div>
+
+  <div class="screen" id="s-mbti">
+    <div class="progress"><span class="done"></span><span class="done"></span><span class="done"></span><span></span></div>
+    <div class="eyebrow">通行证・第三类</div>
+    <h1 class="title" style="font-size:26px;">优势（对照MBTI）</h1>
+    <p class="sub">选出你早上测出的MBTI四个字母。不确定的话，可以直接跳过——或者照下面的形容，选比较像你的那个。</p>
+    <div class="mbti-cap">E 外向（爱热闹、喜欢和人相处） / I 内向（爱独处、喜欢安静充电）</div>
+    <div class="mbti-row" id="row0"></div>
+    <div class="mbti-cap">S 实感（重实际、脚踏实地） / N 直觉（爱想象、看大方向）</div>
+    <div class="mbti-row" id="row1"></div>
+    <div class="mbti-cap">T 思考（靠逻辑做决定） / F 情感（靠感受做决定）</div>
+    <div class="mbti-row" id="row2"></div>
+    <div class="mbti-cap">J 判断（喜欢计划、按表操课） / P 感知（比较随性、临场应变）</div>
+    <div class="mbti-row" id="row3"></div>
+    <div id="mbtiResult" style="margin-top:18px;"></div>
+  </div>
+
+  <div class="screen" id="s-personasummary">
+    <div class="progress"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span></div>
+    <div class="eyebrow">通行证・完成</div>
+    <h1 class="title" style="font-size:26px;">你的起点</h1>
+    <p class="sub">现在才告诉你几分——刚才你是照真实情况选的，不是照分数选的。</p>
+    <div id="personaSummary"></div>
+  </div>
+
+  <div class="screen" id="s-earn">
+    <div class="eyebrow">加码区・自己赚积分</div>
+    <h1 class="title" style="font-size:26px;">去赚一点积分吧</h1>
+    <p class="sub">你有 <b>5次机会</b>，自己选要去哪一站，不去也可以。完成老师的问题或任务后，把老师说的分数打进去。同一站可以再去一次。</p>
+    <div class="attempt-track" id="attemptTrack"></div>
+    <div id="earnBody"></div>
+  </div>
+
+  <div class="screen" id="s-timeup">
+    <div style="margin-top:16vh; text-align:center;">
+      <div class="eyebrow">加码区・时间结束</div>
+      <div style="font-size:56px; margin:18px 0;">⏰</div>
+      <h1 class="title display" style="font-size:32px;">时间到！</h1>
+      <p class="sub" style="font-size:16px; margin-top:14px;">请同学们回到 <b>G1</b></p>
+      <p class="sub" style="font-size:15px;">请停留在这个页面，等老师指示再继续。</p>
+    </div>
+  </div>
+
+  <div class="screen" id="s-prepath">
+    <div class="eyebrow">命运卡・现在的生活（17-19岁）</div>
+    <h1 class="title" style="font-size:26px;">买路径之前，先发生了这件事</h1>
+    <p class="sub">你现在还是学生——这次不是纯粹的运气，是你自己的选择。</p>
+    <div class="fatewrap" id="prepathwrap"></div>
+  </div>
+
+  <div class="screen" id="s-path">
+    <div class="eyebrow">人生路径柜台・投资未来</div>
+    <h1 class="title" style="font-size:26px;">先买你的路径</h1>
+    <p class="sub">这是这场游戏最重要的一个决定。想清楚可以随时改——就像现实一样。</p>
+    <div id="pathList"></div>
+  </div>
+
+  <div class="screen" id="s-event1">
+    <div class="eyebrow">走上这条路・命运卡（19-23岁）</div>
+    <h1 class="title" style="font-size:26px;">路上，第一件事发生了</h1>
+    <p class="sub">同一条路，每个人遇到的际遇都不一样。</p>
+    <div class="fatewrap" id="event1wrap"></div>
+  </div>
+
+  <div class="screen" id="s-event2">
+    <div class="eyebrow">走上这条路・命运卡（19-23岁）</div>
+    <h1 class="title" style="font-size:26px;">接着，又发生了这件事</h1>
+    <p class="sub">人生总是充满意外——有好的，也有不好的。</p>
+    <div class="fatewrap" id="event2wrap"></div>
+  </div>
+
+  <div class="screen" id="s-midchoice">
+    <div class="eyebrow">命运卡・长大一点的生活（19-24岁）</div>
+    <h1 class="title" style="font-size:26px;">这几年，你也做了一个决定</h1>
+    <p class="sub">不只是运气——这次也是你自己的选择。</p>
+    <div class="fatewrap" id="midchoicewrap"></div>
+  </div>
+
+  <div class="screen" id="s-totalreveal">
+    <div class="eyebrow">走到这里・你目前拥有</div>
+    <h1 class="title" style="font-size:26px;">这是你现在的总积分</h1>
+    <p class="sub">接下来，你要用这些积分，决定你想过的生活。</p>
+    <div style="text-align:center; margin-top:10vh;">
+      <div class="eyebrow">目前总积分</div>
+      <div class="display" id="totalRevealNum" style="font-size:64px; color:var(--gold-deep);"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-dreams">
+    <div class="eyebrow">兑换柜台・买生活</div>
+    <h1 class="title" style="font-size:26px;">用你的积分，选你想要的生活</h1>
+    <p class="sub">最多选5样你想要的生活，顺序由你自己决定——选不满5个没关系，买不起也没关系。</p>
+    <div id="dreamChoicesWrap"></div>
+    <div style="margin-top:16px; text-align:right; font-family:'Courier New',monospace; font-size:13px; color:var(--text-soft);">已经花了 <span id="dreamSpentNum">0</span> 点</div>
+  </div>
+
+  <div class="screen" id="s-postdream">
+    <div class="eyebrow">命运卡・人生下一站（24-26岁）</div>
+    <h1 class="title" style="font-size:26px;">几年后，生活又不一样了</h1>
+    <p class="sub">你差不多24-26岁了，人生进入下一个阶段——感情、家庭、责任都跟着来。</p>
+    <div class="fatewrap" id="postdreamwrap"></div>
+  </div>
+
+  <div class="screen" id="s-final">
+    <div class="eyebrow">游戏结束了，人生还没</div>
+    <h1 class="title" style="font-size:26px;">你的这一局</h1>
+    <div id="finalCard"></div>
+  </div>
+
+  <div class="btnbar">
+    <button class="btn btn-ghost" id="backBtn" style="display:none;">上一步</button>
+    <button class="btn btn-primary" id="nextBtn">开始</button>
+  </div>
+
+</div>
+
+<script>
+/* ===== 把这里换成你自己的 Google Apps Script Web App 网址 ===== */
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzR2bgS3uHDVpXZexAspH7rZt1x8zzCdHuqwHqgTV9IkHDX_huFCvZ1G5ItToMszq6Nkg/exec";
+
+/* ===== 把下面换成你班上的名单（复制贴上即可），学生用选的，不用自己打字 ===== */
+const STUDENT_NAMES = [
+  "TOH SZE MIAN", "CANDY LIU SII ENN", "LIAN XIN YEE", "LOI QUAN WEY", "KHOO KIM LENG",
+  "ONG RU YIN", "GOO KAH WERN CARMEN", "EYU XUAN YEE", "LIM KWAN YEE", "LEE LI XUAN",
+  "LIEW ZHAN HWA", "YAP LI YING", "SOO LING LYI", "TAN ZIA JIA", "CHANG SHAN YA",
+  "TAN WILLEN", "SUM ZHI YI", "TAN TIAN KEAT", "LEE JIA YING", "ANG JIE XIN",
+  "YEO JIA YU", "LIM YIN ROU", "LIM YIN XUAN", "TE MAY HUEY", "TEE YU THONG",
+  "TAN SEN JACK", "ONG JUN KIET", "TAN MENG FENG", "LIM KAI TING", "TIU JIA QI",
+  "LIM YIN XI", "EVERLYN KOH ZI SYUEN", "CHLOE TAN ZHI XING", "SIOW WEN XUAN", "LEE YEN LIN",
+  "SIA XIN I", "YEW WEN XIN", "SIH WEN YENG", "LIM JIA JIA", "TAN JIA HONG",
+  "HENG XIAO XUAN", "TANG HONG YU", "CHARLES LOO", "TEW MING XUEN", "LUCAS KEE YI HAW",
+  "LIM YI SHUN", "LIM KHAI ZHE", "NGA XIN RU", "SHERMAINE WONG SZE MIEN", "TUNG XIN YI",
+  "TOO QIAO MIN", "TEE YU HUI", "CHONG XIANG QIN", "YAP JIN XI", "ELIZABETH SOH HUI XIN",
+  "LO WAI YIP", "TIFFANY TAN LI YEN", "ELISE GAN KAI SIN", "RUSSELL ONG YONG ZHENG", "MAXWELL KAOSI NSONWU",
+  "TAN XIN YEE", "ERIC YAP ZHI YI", "LIAN JUN AN", "YAP QIAN LING", "CHU CARMEN",
+  "OOI WEI SHUEN", "TAN ANN QI", "LOO SZE MIN", "CHONG LI HONG", "GERARD GAN KAI PING",
+  "CHONG YU HANN", "VANESSA TAN HONG XIU", "NGAN ZI YANG", "LIM QI REN", "YIP WEI MING",
+  "CHOO LIN YAN", "SEOW EE JO", "NG TING FENG", "YEO SUEN YING", "TAN YOU SHENG",
+  "DARREN LIM CHUN YU", "LIM KHAI FUNG", "LEE YONG LIANG", "CH'NG JIUNN XIAN", "WONG WEI QI",
+  "KHOO XIN YU", "AARON YONG GUO FENG", "GAN WEI WEI", "LEW KAI ZHE", "FOO KAI HWEI",
+  "TRENT CHUNG TIAN CHENG", "CHAM MING LE", "LIM ZI QIAN", "TAN LEE SHUEN", "LAW ZHENG YI",
+  "TAN JAY TZI", "NYEW YI QIAN", "CHONG ZHENG AN", "THEW ZHU FENG", "NG XIN KIN",
+  "CASS CHEW SIN YEE", "LOH KAI QIAN", "CLOWIE NG YONG XUAN", "YAP KE SHUEN", "CHIANG XIN YING",
+];
+
+const GOAL_EXAMPLES = [
+  "🌍 环游世界", "☕ 开一家自己的店", "🏢 有一份稳定的工作",
+  "💰 早点赚钱照顾家人", "🎨 做自己喜欢的事", "🎓 读完想读的科系",
+  "🏠 有一个属于自己的家", "🚗 买一辆自己的车", "💪 有健康的身体",
+  "👨‍👩‍👧 组建自己的家庭", "🌟 成为某个领域的专家", "🤝 帮助更多人",
+  "🎮 靠兴趣赚钱", "✈️ 到国外生活或工作",
+];
+
+/* ---------------- DATA ---------------- */
+const FAMILY = [
+  {t:"爸妈已存好大学基金，经济无压力", p:50},
+  {t:"家里经济宽裕，大致没问题", p:40},
+  {t:"家里经济中等，要自己想办法", p:30},
+  {t:"家里经济较紧，需申请助学金／贷款", p:20},
+  {t:"家里经济紧，希望尽快分担家用", p:10},
+];
+const ACADEMIC = [
+  {t:"SPM成绩优异，目标科系明确", p:50},
+  {t:"成绩不错，方向大致清楚", p:40},
+  {t:"成绩中等，仍在摸索", p:30},
+  {t:"成绩普通，方向未定", p:20},
+  {t:"成绩待加强，还没找到方向", p:10},
+];
+const MBTI_GROUPS = {
+  NT:{t:"好学／自律", p:20}, SJ:{t:"责任感强／务实", p:20},
+  NF:{t:"沟通力强／人缘好", p:20}, SP:{t:"抗压力强／适应力好", p:20},
+};
+const MBTI_UNKNOWN = {t:"还在认识自己，暂无明显强项", p:10};
+
+const STATIONS = [
+  {key:"know", emoji:"📚", name:"知识站", tag:"抽题卡答题，对照卡背给分"},
+  {key:"chal", emoji:"🤝", name:"挑战站", tag:"30秒动作挑战，成功就给分"},
+  {key:"brave", emoji:"✍️", name:"勇气站", tag:"写下来，贴上墙就完成"},
+];
+const TOTAL_ATTEMPTS = 5;
+
+const PATHS = [
+  {key:"uni", icon:"🎓", name:"买大学", noun:"读书人", price:70,
+    pros:"有文凭比较容易找工作，学到的知识和人脉也比较扎实", cons:"要读比较久，毕业后才开始赚钱"},
+  {key:"hw", icon:"🌱", name:"买半工半读", noun:"斜杠青年", price:50,
+    pros:"一边赚钱一边学习，比较快有实际经验，也能帮忙家用", cons:"身体和时间会比较累，要很会安排自己的时间"},
+  {key:"job", icon:"💼", name:"买直接就业", noun:"社会新鲜人", price:30,
+    pros:"马上有钱赚，也能早点开始累积工作经验", cons:"薪水可能比较低，以后想升职或换工作，也可能因为没文凭受限"},
+  {key:"undecided", icon:"🤔", name:"还没决定", noun:"迷雾旅人", price:20,
+    pros:"给自己多一点时间想清楚，不用急着做决定", cons:"可能会错过一些有时间限制的机会"},
+];
+
+const DREAM_COUNTERS = [
+  {key:"uni", name:"🎓 在读大学", items:[
+    {t:"给爸妈一点家用，帮忙分担一些", p:15},
+    {t:"本地小旅行", p:20},
+    {t:"经济独立，不用跟家里伸手要钱", p:10},
+    {t:"拥有一个让自己开心的兴趣爱好", p:15},
+    {t:"学会一个新技能", p:20},
+  ]},
+  {key:"grad", name:"🎒 即将毕业", items:[
+    {t:"顺利毕业，拿到自己的文凭", p:15},
+    {t:"找到自己满意的工作", p:25},
+    {t:"收到梦想公司的录取通知", p:20},
+  ]},
+  {key:"early", name:"💼 毕业1-2年", items:[
+    {t:"还清贷学金／PTPTN，没有债务压力", p:30},
+    {t:"出国旅游一趟", p:40},
+    {t:"买一辆简单代步的车", p:45},
+    {t:"拥有紧急备用金（够生活3个月）", p:30},
+    {t:"买个人保险", p:30},
+    {t:"换一台更好用的手机／电脑", p:25},
+    {t:"搬出去住，租一间自己的房子", p:45},
+  ]},
+  {key:"career", name:"🚀 就业5-8年", items:[
+    {t:"给爸妈更多家用，让他们过得轻松一点", p:35},
+    {t:"有储蓄（RM50,000）", p:40},
+    {t:"拥有一份让钱生钱的投资", p:35},
+    {t:"顺利步入婚姻，组建自己的家庭", p:40},
+    {t:"拿到硕士学位，成为某个领域的专家", p:40},
+    {t:"拥有属于自己的事业", p:55},
+    {t:"买一辆真正想要的Dream Car", p:65},
+    {t:"存房子的头期款", p:65},
+  ]},
+  {key:"life", name:"🎈 生活质感（不分阶段）", items:[
+    {t:"追星／演唱会门票", p:25},
+    {t:"请自己吃一顿犒赏大餐", p:15},
+    {t:"养一只宠物", p:35},
+  ]},
+];
+/* 所有生活选项混在一起，不分柜台；按扣分从小到大排序，引导学生从小目标开始、循序渐进 */
+const ALL_DREAMS = DREAM_COUNTERS.flatMap(c=>c.items).sort((a,b)=>a.p-b.p);
+
+const SCENARIO_POOL = [
+  {
+    q: "好朋友约你这个周末出去玩，但你还有很多功课没赶上，你会怎么做？",
+    a: {label:"去！和朋友出去，友情最重要", delta:5, result:"你们玩得很开心，友情又更好了一点，但功课进度慢了一些。"},
+    b: {label:"留下来把功课赶完", delta:10, result:"你把落后的进度赶上了，虽然有点闷，但心里踏实多了。"},
+  },
+  {
+    q: "拿到一笔零用钱，你会怎么用？",
+    a: {label:"买想要很久的东西", delta:5, result:"买到想要的东西，心情很好，但钱花完了。"},
+    b: {label:"存起来", delta:10, result:"你把钱存起来，虽然当下有点可惜，但存款默默变多了。"},
+  },
+  {
+    q: "同学邀你一起组队参加课外活动，需要花额外的时间和精力，你会？",
+    a: {label:"答应，一起拼一次", delta:15, result:"活动做得很成功，你们都很有成就感，也认识了很好的朋友。"},
+    b: {label:"婉拒，专心顾好自己的进度", delta:5, result:"你专心顾好自己的部分，也没什么损失。"},
+  },
+  {
+    q: "新学期分班，迎新活动上认识了一群新同学，你会？",
+    a: {label:"主动去认识，交换联络方式", delta:10, result:"你交到了一个很合得来的好朋友，像多了一个闺蜜。"},
+    b: {label:"先观察，不急着交朋友", delta:5, result:"你比较慢热，但也慢慢跟大家熟起来了。"},
+  },
+];
+
+const MID_SCENARIO_POOL = [
+  {
+    q: "手上多了一笔加班费／奖学金尾款，你会怎么用？",
+    a: {label:"犒赏自己，买一直想要的东西", delta:5, result:"你买到想要的东西，日子过得开心一点。"},
+    b: {label:"存起来，应付接下来的开销", delta:10, result:"你把钱存起来，安全感多了一点。"},
+  },
+  {
+    q: "身边的人都在报名一个新技能班／考一张证照，你会？",
+    a: {label:"跟着一起报名，多学一点是一点", delta:15, result:"你多学了一项技能，之后派上用场的机会变多了。"},
+    b: {label:"先顾好眼前的事，晚一点再说", delta:5, result:"你把手上的事情顾好，暂时没分心去学别的。"},
+  },
+  {
+    q: "朋友提议合租搬出去住，离现在熟悉的生活圈更远一点，你会？",
+    a: {label:"答应，想给自己一个独立的机会", delta:10, result:"你开始学着照顾自己，虽然一开始手忙脚乱，但慢慢上手了。"},
+    b: {label:"先留在原本熟悉的地方", delta:5, result:"你选择先稳一点，把重心放在手上的事情。"},
+  },
+  {
+    q: "手机忽然跳出一个副业／兼职的邀约，你会？",
+    a: {label:"花时间了解看看，说不定是机会", delta:10, result:"你去了解了一下，虽然还不确定结果，但多认识了一个可能性。"},
+    b: {label:"先划掉，把重心放在手上的事", delta:10, result:"你没分心，把原本在做的事情顾得更好。"},
+  },
+];
+
+const POST_DREAM_EVENTS = [
+  {type:"good", text:"顺利求婚成功，两个人一起规划未来。", delta:15},
+  {type:"good", text:"升职加薪，责任更大，但收入也更好。", delta:20},
+  {type:"good", text:"存够头期款，买下人生第一间房。", delta:25},
+  {type:"good", text:"副业越做越好，变成稳定的额外收入。", delta:15},
+  {type:"good", text:"爸妈身体健康，还能帮忙顾家。", delta:10},
+  {type:"good", text:"跟老朋友重聚，聊得很开心，感情还是一样好。", delta:10},
+  {type:"bad", text:"爸妈生病，需要你分担医药费。", delta:-20},
+  {type:"bad", text:"结婚开销比想象中大，超出预算。", delta:-20},
+  {type:"bad", text:"孩子出生，家庭开销大增。", delta:-20},
+  {type:"bad", text:"房租或房贷调涨，生活压力变大。", delta:-15},
+  {type:"bad", text:"转换跑道重新开始，收入暂时下降。", delta:-15},
+];
+
+const PATH_OUTCOMES = {
+  uni: [
+    {type:"good", text:"教授觉得你有潜力，介绍你加入研究项目，让你提早认识很多人。", delta:15},
+    {type:"good", text:"申请到额外的奖学金，减轻负担。", delta:20},
+    {type:"good", text:"认识的学长学姐，教你少走很多弯路。", delta:10},
+    {type:"good", text:"认识了志同道合的同学，一起做报告特别顺，感情也变好了。", delta:10},
+    {type:"bad", text:"你选错科系，读到一半想转组，多花时间和钱。", delta:-20},
+    {type:"bad", text:"课业压力大，得额外请家教补习。", delta:-15},
+    {type:"bad", text:"笔电忽然坏了，得马上换一台交功课。", delta:-10},
+  ],
+  hw: [
+    {type:"good", text:"你一边做一边学，提早有了作品，毕业前就有公司找你。", delta:20},
+    {type:"good", text:"老板愿意配合你的上课时间，弹性很大。", delta:15},
+    {type:"good", text:"你打工存到的钱，刚好拿去付学费。", delta:10},
+    {type:"good", text:"工作伙伴人很好，互相照顾，上班变得有趣。", delta:10},
+    {type:"bad", text:"要兼顾工作和读书，压力很大，几乎没时间休息。", delta:-15},
+    {type:"bad", text:"工作和上课时间冲突，得临时请假处理。", delta:-15},
+    {type:"bad", text:"打工时不小心受伤，得看医生花一笔钱。", delta:-10},
+  ],
+  job: [
+    {type:"good", text:"老板很欣赏你，提拔你当小主管。", delta:20},
+    {type:"good", text:"遇到很照顾你的前辈，教你很多东西，少走弯路。", delta:15},
+    {type:"good", text:"你表现好，争取到一笔奖金。", delta:10},
+    {type:"good", text:"跟同事处得很好，上班变得有趣，像多了一群朋友。", delta:10},
+    {type:"bad", text:"工作时间长压力大，没时间学新东西，感觉一直没进步。", delta:-15},
+    {type:"bad", text:"行业不景气，工作变得不稳定。", delta:-20},
+    {type:"bad", text:"手机坏了，得马上换一台上班用。", delta:-10},
+  ],
+  undecided: [
+    {type:"good", text:"你东试西试之后，意外发现自己真正喜欢的方向。", delta:15},
+    {type:"good", text:"有朋友拉你一起打工，赚到一点生活费。", delta:10},
+    {type:"good", text:"认识了一群朋友，一起讨论未来方向，没那么迷茫了。", delta:10},
+    {type:"bad", text:"一直没有行动，机会一个个从你身边溜走。", delta:-20},
+    {type:"bad", text:"家人一直催你决定，让你压力很大。", delta:-10},
+  ],
+};
+
+/* ---------------- STATE ---------------- */
+let state = {
+  step:0, name:"", initialGoal:"", strengths:"", weaknesses:"",
+  family:null, academic:null, mbti:[null,null,null,null], mbtiSkipped:false,
+  earnAttemptsUsed:0, earnTotal:0, earnPhase:"picker", earnStation:null, earnLog:[],
+  prepathScenario:null, preEvent:null, event1:null, event2:null,
+  midScenario:null, midEvent:null, postEvent:null,
+  path:null, pathWhy:"", pathExpect:"",
+  dreamChoices:[null,null,null,null,null],
+  goalReflection:"", thoughts:"", submitted:false,
+};
+
+const steps = ["s-cover","s-intro","s-family","s-academic","s-mbti","s-personasummary",
+  "s-prepath","s-earn","s-timeup","s-path","s-event1","s-event2","s-midchoice","s-totalreveal","s-dreams","s-postdream","s-final"];
+
+function baseTotal(){
+  const f = state.family!==null ? FAMILY[state.family].p : 0;
+  const a = state.academic!==null ? ACADEMIC[state.academic].p : 0;
+  const m = mbtiCard().p;
+  return f+a+m;
+}
+function mbtiCard(){
+  if(state.mbtiSkipped || state.mbti.includes(null)) return MBTI_UNKNOWN;
+  const code = state.mbti.join("");
+  const S = code[1]==="S", N = code[1]==="N", T=code[2]==="T", F=code[2]==="F";
+  if(N && T) return MBTI_GROUPS.NT;
+  if(S && (code[3]==="J")) return MBTI_GROUPS.SJ;
+  if(N && F) return MBTI_GROUPS.NF;
+  if(S && (code[3]==="P")) return MBTI_GROUPS.SP;
+  return MBTI_UNKNOWN;
+}
+function fateSum(){ return (state.preEvent?state.preEvent.delta:0) + (state.event1?state.event1.delta:0) + (state.event2?state.event2.delta:0) + (state.midEvent?state.midEvent.delta:0) + (state.postEvent?state.postEvent.delta:0); }
+function spentOnPath(){ return state.path ? PATHS.find(p=>p.key===state.path).price : 0; }
+function spentOnDreams(){ return state.dreamChoices.reduce((s,d)=>s+(d?d.p:0),0); }
+function balance(){ return baseTotal() + state.earnTotal + fateSum() - spentOnPath() - spentOnDreams(); }
+
+/* ---------------- RENDER: INTRO ---------------- */
+function renderIntro(){
+  const sel = document.getElementById("nameSelect");
+  const otherInput = document.getElementById("nameOtherInput");
+  if(sel.options.length===0){
+    const blank = document.createElement("option");
+    blank.value = ""; blank.textContent = "请选择你的名字";
+    sel.appendChild(blank);
+    STUDENT_NAMES.forEach(n=>{
+      const o = document.createElement("option");
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+    const other = document.createElement("option");
+    other.value = "__other__"; other.textContent = "名单里没有我，我要自己打";
+    sel.appendChild(other);
+  }
+  // restore state
+  if(state.name && STUDENT_NAMES.includes(state.name)){
+    sel.value = state.name;
+  } else if(state.name){
+    sel.value = "__other__";
+    otherInput.style.display = "block";
+    otherInput.value = state.name;
+  }
+  sel.onchange = ()=>{
+    if(sel.value==="__other__"){
+      otherInput.style.display = "block";
+      state.name = otherInput.value;
+    } else {
+      otherInput.style.display = "none";
+      state.name = sel.value;
+    }
+    updateNext();
+  };
+  otherInput.oninput = (e)=>{ state.name = e.target.value; updateNext(); };
+
+  document.getElementById("strengthsInput").value = state.strengths;
+  document.getElementById("strengthsInput").oninput = (e)=>{ state.strengths = e.target.value; };
+  document.getElementById("weaknessesInput").value = state.weaknesses;
+  document.getElementById("weaknessesInput").oninput = (e)=>{ state.weaknesses = e.target.value; };
+
+  const chipRow = document.getElementById("goalChips");
+  if(chipRow.children.length===0){
+    GOAL_EXAMPLES.forEach(g=>{
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      chip.textContent = g;
+      chip.onclick = ()=>{
+        const goalInput = document.getElementById("goalInput");
+        goalInput.value = g.replace(/^\S+\s/, ""); // drop emoji prefix
+        state.initialGoal = goalInput.value;
+      };
+      chipRow.appendChild(chip);
+    });
+  }
+
+  document.getElementById("goalInput").value = state.initialGoal;
+  document.getElementById("goalInput").oninput = (e)=>{ state.initialGoal=e.target.value; };
+}
+
+/* ---------------- RENDER: PERSONA ---------------- */
+function renderOptList(container, arr, selectedIdx, onPick, showPts){
+  container.innerHTML = "";
+  arr.forEach((opt,i)=>{
+    const div = document.createElement("div");
+    div.className = "opt" + (selectedIdx===i ? " selected":"");
+    div.innerHTML = `<span>${opt.t}</span>` + (showPts ? `<span class="pts">${opt.p}点</span>` : "");
+    div.onclick = ()=>onPick(i);
+    container.appendChild(div);
+  });
+}
+function renderFamily(){ renderOptList(document.getElementById("familyList"), FAMILY, state.family, (i)=>{state.family=i; renderFamily(); updateNext();}, false); }
+function renderAcademic(){ renderOptList(document.getElementById("academicList"), ACADEMIC, state.academic, (i)=>{state.academic=i; renderAcademic(); updateNext();}, false); }
+
+function renderMbti(){
+  const labels = [["E","I"],["S","N"],["T","F"],["J","P"]];
+  labels.forEach((pair,idx)=>{
+    const row = document.getElementById("row"+idx);
+    row.innerHTML = "";
+    pair.forEach(letter=>{
+      const b = document.createElement("div");
+      b.className = "mbti-btn" + (state.mbti[idx]===letter ? " on":"");
+      b.textContent = letter;
+      b.onclick = ()=>{ state.mbti[idx]=letter; state.mbtiSkipped=false; renderMbti(); updateNext(); };
+      row.appendChild(b);
+    });
+  });
+  const resultBox = document.getElementById("mbtiResult");
+  if(!state.mbti.includes(null) && !state.mbtiSkipped){
+    resultBox.innerHTML = `<div class="opt selected static"><span>已选好，点「下一步」继续</span></div>`;
+  } else if(state.mbtiSkipped){
+    resultBox.innerHTML = `<div class="opt selected static"><span>已跳过，点「下一步」继续</span></div>`;
+  } else {
+    resultBox.innerHTML = `<div style="text-align:center;"><span class="tab" id="skipMbti" style="cursor:pointer;">还不确定？直接跳过 →</span></div>`;
+    document.getElementById("skipMbti").onclick = ()=>{ state.mbtiSkipped=true; renderMbti(); updateNext(); };
+  }
+}
+
+function renderPersonaSummary(){
+  document.getElementById("personaSummary").innerHTML = `
+    <div style="margin-top:10vh; text-align:center;">
+      <div class="eyebrow">基础积分</div>
+      <div class="display" style="font-size:64px; color:var(--gold-deep);">${baseTotal()}</div>
+    </div>
+  `;
+}
+
+/* ---------------- RENDER: EARN ZONE ---------------- */
+function renderEarnZone(){
+  const track = document.getElementById("attemptTrack");
+  track.innerHTML = "";
+  for(let i=0;i<TOTAL_ATTEMPTS;i++){
+    const pip = document.createElement("div");
+    pip.className = "pip" + (i<state.earnAttemptsUsed ? " used":"");
+    track.appendChild(pip);
+  }
+  const body = document.getElementById("earnBody");
+
+  if(state.earnAttemptsUsed>=TOTAL_ATTEMPTS){
+    body.innerHTML = `<div class="doneallcard">🎉 5次机会都用完了<br><span style="font-size:24px; display:block; margin-top:10px; color:var(--gold-deep); font-weight:700;">共赚了 +${state.earnTotal} 点</span></div>`;
+    return;
+  }
+
+  if(state.earnPhase==="picker"){
+    const grid = document.createElement("div");
+    grid.className = "stationpick";
+    STATIONS.forEach(st=>{
+      const card = document.createElement("div");
+      card.className = "stationcard";
+      card.innerHTML = `<div class="emoji">${st.emoji}</div><div><div class="name">${st.name}</div><div class="tag">${st.tag}</div></div>`;
+      card.onclick = ()=>{ state.earnStation = st; state.earnPhase="answer"; renderEarnZone(); };
+      grid.appendChild(card);
+    });
+    body.innerHTML = "";
+    body.appendChild(grid);
+  } else {
+    const st = state.earnStation;
+    const box = document.createElement("div");
+    box.className = "answerbox";
+    box.innerHTML = `
+      <div class="q">题目 ${state.earnAttemptsUsed+1} ／ ${TOTAL_ATTEMPTS}</div>
+      <div class="stationname">${st.emoji} ${st.name}</div>
+      <input type="number" id="ptsInput" inputmode="numeric" placeholder="老师说你加了几分？">
+      <div class="quickpts">
+        <button data-v="10">+10</button>
+        <button data-v="20">+20</button>
+        <button data-v="30">+30</button>
+      </div>
+      <div class="hint">完成老师的问题／任务后，输入老师告诉你的分数</div>
+    `;
+    body.innerHTML = "";
+    body.appendChild(box);
+    box.querySelectorAll(".quickpts button").forEach(b=>{
+      b.onclick = ()=>{ document.getElementById("ptsInput").value = b.dataset.v; };
+    });
+    const bar = document.createElement("div");
+    bar.style.cssText = "display:flex; gap:10px; margin-top:16px;";
+    bar.innerHTML = `
+      <button class="btn btn-ghost" style="flex:1;" id="cancelEarn">换一站</button>
+      <button class="btn btn-primary" style="flex:1;" id="confirmEarn">确认加分</button>
+    `;
+    body.appendChild(bar);
+    document.getElementById("cancelEarn").onclick = ()=>{ state.earnPhase="picker"; state.earnStation=null; renderEarnZone(); };
+    document.getElementById("confirmEarn").onclick = ()=>{
+      const v = parseInt(document.getElementById("ptsInput").value, 10);
+      if(isNaN(v) || v<0){ alert("请输入老师告诉你的分数"); return; }
+      state.earnLog.push({station: st.name, points: v});
+      state.earnTotal += v;
+      state.earnAttemptsUsed += 1;
+      state.earnPhase = "picker";
+      state.earnStation = null;
+      renderEarnZone();
+      updateBalanceBar();
+    };
+  }
+}
+
+/* ---------------- RENDER: PATH-SPECIFIC EVENTS ---------------- */
+function renderPrePath(){
+  const wrap = document.getElementById("prepathwrap");
+
+  if(!state.prepathScenario){
+    state.prepathScenario = SCENARIO_POOL[Math.floor(Math.random()*SCENARIO_POOL.length)];
+  }
+  const sc = state.prepathScenario;
+
+  if(!state.preEvent){
+    wrap.innerHTML = `
+      <div class="scenario-q">${sc.q}</div>
+      <div class="choice-btn" id="choiceA">${sc.a.label}</div>
+      <div class="choice-btn" id="choiceB">${sc.b.label}</div>
+    `;
+    document.getElementById("choiceA").onclick = ()=>{
+      state.preEvent = {type: sc.a.delta>=0?"good":"bad", text: sc.a.result, delta: sc.a.delta};
+      renderPrePath(); updateBalanceBar(); updateNext();
+    };
+    document.getElementById("choiceB").onclick = ()=>{
+      state.preEvent = {type: sc.b.delta>=0?"good":"bad", text: sc.b.result, delta: sc.b.delta};
+      renderPrePath(); updateBalanceBar(); updateNext();
+    };
+  } else {
+    const c = state.preEvent;
+    wrap.innerHTML = `<div class="fatecard revealed ${c.type}"><div class="fate-delta">${c.delta>0?"+":""}${c.delta}</div><div class="fate-text">${c.text}</div></div>`;
+  }
+  updateNext();
+}
+
+function renderMidChoice(){
+  const wrap = document.getElementById("midchoicewrap");
+
+  if(!state.midScenario){
+    state.midScenario = MID_SCENARIO_POOL[Math.floor(Math.random()*MID_SCENARIO_POOL.length)];
+  }
+  const sc = state.midScenario;
+
+  if(!state.midEvent){
+    wrap.innerHTML = `
+      <div class="scenario-q">${sc.q}</div>
+      <div class="choice-btn" id="midChoiceA">${sc.a.label}</div>
+      <div class="choice-btn" id="midChoiceB">${sc.b.label}</div>
+    `;
+    document.getElementById("midChoiceA").onclick = ()=>{
+      state.midEvent = {type: sc.a.delta>=0?"good":"bad", text: sc.a.result, delta: sc.a.delta};
+      renderMidChoice(); updateBalanceBar(); updateNext();
+    };
+    document.getElementById("midChoiceB").onclick = ()=>{
+      state.midEvent = {type: sc.b.delta>=0?"good":"bad", text: sc.b.result, delta: sc.b.delta};
+      renderMidChoice(); updateBalanceBar(); updateNext();
+    };
+  } else {
+    const c = state.midEvent;
+    wrap.innerHTML = `<div class="fatecard revealed ${c.type}"><div class="fate-delta">${c.delta>0?"+":""}${c.delta}</div><div class="fate-text">${c.text}</div></div>`;
+  }
+  updateNext();
+}
+
+function renderPostDream(){
+  const wrap = document.getElementById("postdreamwrap");
+  if(!state.postEvent){
+    wrap.innerHTML = `<div class="fatecard" id="postdreamCard"><div class="big">🎴</div><div>点一下，翻开命运卡</div></div>`;
+    document.getElementById("postdreamCard").onclick = ()=>{
+      state.postEvent = POST_DREAM_EVENTS[Math.floor(Math.random()*POST_DREAM_EVENTS.length)];
+      renderPostDream(); updateBalanceBar(); updateNext();
+    };
+  } else {
+    const c = state.postEvent;
+    wrap.innerHTML = `<div class="fatecard revealed ${c.type}"><div class="fate-delta">${c.delta>0?"+":""}${c.delta}</div><div class="fate-text">${c.text}</div></div>`;
+  }
+  updateNext();
+}
+
+function renderEvent(slot){
+  const wrap = document.getElementById(slot===1 ? "event1wrap" : "event2wrap");
+  const drawn = slot===1 ? state.event1 : state.event2;
+  const elId = slot===1 ? "eventCard1" : "eventCard2";
+
+  if(!drawn){
+    wrap.innerHTML = `<div class="fatecard" id="${elId}"><div class="big">🎴</div><div>点一下，看看发生了什么</div></div>`;
+    document.getElementById(elId).onclick = ()=>{
+      const pool = PATH_OUTCOMES[state.path];
+      const exclude = slot===2 && state.event1 ? state.event1.text : null;
+      const options = pool.filter(c=>c.text!==exclude);
+      const card = options[Math.floor(Math.random()*options.length)];
+      if(slot===1) state.event1 = card; else state.event2 = card;
+      renderEvent(slot); updateBalanceBar(); updateNext();
+    };
+  } else {
+    wrap.innerHTML = `<div class="fatecard revealed ${drawn.type}"><div class="fate-delta">${drawn.delta>0?"+":""}${drawn.delta}</div><div class="fate-text">${drawn.text}</div></div>`;
+  }
+  updateNext();
+}
+
+/* ---------------- RENDER: PATH ---------------- */
+function renderPaths(){
+  const list = document.getElementById("pathList");
+  list.innerHTML = "";
+  PATHS.forEach(p=>{
+    const card = document.createElement("div");
+    card.className = "path-card" + (state.path===p.key ? " selected":"");
+    card.innerHTML = `
+      <div class="path-top">
+        <div class="icon">${p.icon}</div>
+        <div class="path-name">${p.name}</div>
+      </div>
+      <div class="path-task">🟢 优点：${p.pros}</div>
+      <div class="path-task">🔴 缺点：${p.cons}</div>
+    `;
+    card.onclick = ()=>{
+      if(state.path !== p.key){
+        state.path = p.key;
+        state.event1 = null; state.event2 = null;
+        state.pathWhy = ""; state.pathExpect = "";
+      }
+      renderPaths(); updateNext(); updateBalanceBar();
+    };
+    list.appendChild(card);
+  });
+
+  if(state.path){
+    const box = document.createElement("div");
+    box.className = "path-card";
+    box.style.cursor = "default";
+    box.innerHTML = `
+      <label class="flabel" style="margin-top:0;">为什么选这条路？</label>
+      <textarea id="whyInput" rows="2" placeholder="写下你的原因…">${state.pathWhy}</textarea>
+      <label class="flabel">你期待的结果是什么？</label>
+      <textarea id="expectInput" rows="2" placeholder="写下你的期待…">${state.pathExpect}</textarea>
+    `;
+    list.appendChild(box);
+    document.getElementById("whyInput").oninput = (e)=>{ state.pathWhy = e.target.value; updateNext(); };
+    document.getElementById("expectInput").oninput = (e)=>{ state.pathExpect = e.target.value; updateNext(); };
+
+    const note = document.createElement("div");
+    note.className = "switchnote";
+    note.textContent = "想清楚了可以随时换——选另一张卡就会自动改选";
+    list.appendChild(note);
+  }
+}
+
+/* ---------------- RENDER: TOTAL REVEAL ---------------- */
+function renderTotalReveal(){
+  document.getElementById("totalRevealNum").textContent = balance();
+}
+
+/* ---------------- RENDER: DREAM SHOP (5 choices, merged list) ---------------- */
+function renderDreamChoices(){
+  const wrap = document.getElementById("dreamChoicesWrap");
+  wrap.innerHTML = "";
+  const balanceBeforeDreams = baseTotal() + state.earnTotal + fateSum() - spentOnPath();
+
+  for(let i=0;i<5;i++){
+    const label = document.createElement("label");
+    label.className = "flabel";
+    if(i===0) label.style.marginTop = "0";
+    label.textContent = `选择 ${i+1}`;
+    wrap.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "dreamselect";
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "－ 不选 －";
+    select.appendChild(blank);
+
+    const chosenElsewhere = state.dreamChoices.filter((d,idx)=>idx!==i && d).map(d=>d.t);
+    const spentByOthers = state.dreamChoices.reduce((s,d,idx)=> (idx!==i && d) ? s+d.p : s, 0);
+    const affordable = balanceBeforeDreams - spentByOthers;
+
+    ALL_DREAMS.forEach(item=>{
+      if(chosenElsewhere.includes(item.t)) return;
+      const canAfford = item.p <= affordable;
+      const opt = document.createElement("option");
+      opt.value = item.t;
+      opt.textContent = `${item.t}（${item.p}点）` + (canAfford ? "" : " ・买不起");
+      opt.disabled = !canAfford;
+      if(state.dreamChoices[i] && state.dreamChoices[i].t===item.t) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    select.onchange = ()=>{
+      state.dreamChoices[i] = select.value ? ALL_DREAMS.find(d=>d.t===select.value) : null;
+      renderDreamChoices();
+      updateBalanceBar();
+    };
+    wrap.appendChild(select);
+  }
+  document.getElementById("dreamSpentNum").textContent = spentOnDreams();
+}
+
+/* ---------------- RENDER: FINAL (narrative, not score-first) ---------------- */
+function attemptsTier(){
+  if(state.earnAttemptsUsed===0) return "none";
+  if(state.earnAttemptsUsed<=2) return "low";
+  if(state.earnAttemptsUsed<=4) return "mid";
+  return "full";
+}
+const TIER_ADJ = {none:"佛系", low:"小试身手的", mid:"拼劲十足的", full:"全力以赴的"};
+
+function buildTitle(){
+  const p = PATHS.find(x=>x.key===state.path);
+  return TIER_ADJ[attemptsTier()] + p.noun;
+}
+
+function renderFinal(){
+  const p = PATHS.find(x=>x.key===state.path);
+  const chosenDreams = state.dreamChoices.filter(Boolean);
+  const dreamsHtml = chosenDreams.length ? chosenDreams.map(d=>`<li>${d.t}</li>`).join("") : "<li>这次没有选——但以后的选择还会有很多</li>";
+  const bal = balance();
+  const negativeNote = bal<0 ? `<div class="negativenote">💡 结余是负数没关系——代表这一局你过得比较辛苦，不代表你「失败」。人生本来就有起有落，能撑过去，本身就是一种能力。</div>` : "";
+
+  document.getElementById("finalCard").innerHTML = `
+    <div class="titlecard">
+      <div class="eyebrow">你的结局称号</div>
+      <div class="titlename display">${p.icon} ${buildTitle()}</div>
+    </div>
+
+    <div class="storybox">
+      <span class="eyebrow">你选的生活</span>
+      <ul style="margin:0; padding-left:20px; font-size:14px; line-height:1.9;">${dreamsHtml}</ul>
+    </div>
+
+    <div class="reflectbox">
+      <span class="eyebrow">回头看看你一开始的目标（以终为始）</span>
+      <div class="quoteback">「${state.initialGoal || "（这次没有写下目标）"}」</div>
+      <label class="flabel" style="margin-top:0;">这次游戏之后，你觉得这个目标可以实现吗？为什么？</label>
+      <textarea id="reflectInput" rows="3" placeholder="写下你的想法…">${state.goalReflection}</textarea>
+      <label class="flabel">这次游戏，你有什么感想？</label>
+      <textarea id="thoughtsInput" rows="3" placeholder="随便写…">${state.thoughts}</textarea>
+    </div>
+
+    <div class="numbox">
+      <div class="eyebrow" style="margin-bottom:8px;">数字明细（给老师参考）</div>
+      <div class="line"><span>基础积分</span><span>${baseTotal()}</span></div>
+      <div class="line"><span>加码区赚取</span><span>+${state.earnTotal}</span></div>
+      <div class="line"><span>命运际遇合计</span><span>${fateSum()>=0?"+":""}${fateSum()}</span></div>
+      <div class="line"><span>路径花费</span><span>－${p.price}</span></div>
+      <div class="line"><span>生活梦想花费</span><span>－${spentOnDreams()}</span></div>
+      <div class="line total${bal<0 ? ' negative':''}"><span>最终结余</span><span>${bal} 点</span></div>
+    </div>
+    ${negativeNote}
+
+    ${state.submitted
+      ? `<div class="submitted-banner">✅ 已成功送出，老师已经收到你的资料了！</div>`
+      : `<div class="submit-reminder">⚠️ 别忘记按下面这个按钮——一定要按了，老师才收得到你的资料</div>`
+    }
+    <button class="submitbtn ${state.submitted?'done':''}" id="submitBtn">${state.submitted ? "已送出，一起加油 ✓" : "一起努力，迈向目标"}</button>
+    <div style="text-align:center; margin-top:18px;">
+      <span id="resetLink" style="font-size:12px; color:var(--text-soft); text-decoration:underline; cursor:pointer;">这台手机要给下一位同学玩？点这里</span>
+    </div>
+  `;
+
+  document.getElementById("reflectInput").oninput = (e)=>{ state.goalReflection = e.target.value; };
+  document.getElementById("thoughtsInput").oninput = (e)=>{ state.thoughts = e.target.value; };
+  document.getElementById("submitBtn").onclick = submitData;
+  document.getElementById("resetLink").onclick = ()=>{
+    if(!state.submitted){
+      const ok = confirm("你还没有按「一起努力，迈向目标」送出资料，现在离开的话，你的资料不会被保存。确定要离开吗？");
+      if(!ok) return;
+    }
+    resetForNextStudent();
+  };
+}
+
+function resetForNextStudent(){
+  state = {step:0, name:"", initialGoal:"", strengths:"", weaknesses:"", family:null, academic:null, mbti:[null,null,null,null], mbtiSkipped:false,
+    earnAttemptsUsed:0, earnTotal:0, earnPhase:"picker", earnStation:null, earnLog:[],
+    prepathScenario:null, preEvent:null, event1:null, event2:null, midScenario:null, midEvent:null, postEvent:null,
+    path:null, pathWhy:"", pathExpect:"", dreamChoices:[null,null,null,null,null],
+    goalReflection:"", thoughts:"", submitted:false};
+  goTo(0);
+}
+
+function submitData(){
+  const f = FAMILY[state.family], a = ACADEMIC[state.academic], m = mbtiCard(), p = PATHS.find(x=>x.key===state.path);
+  const payload = {
+    timestamp: new Date().toISOString(),
+    name: state.name || "",
+    initialGoal: state.initialGoal || "",
+    strengths: state.strengths || "",
+    weaknesses: state.weaknesses || "",
+    family: f.t, academic: a.t, mbti: m.t,
+    earnAttempts: state.earnAttemptsUsed, earnTotal: state.earnTotal,
+    earnDetail: state.earnLog.map(e=>`${e.station}:${e.points}`).join("、"),
+    preEvent: state.preEvent ? state.preEvent.text : "", preEventDelta: state.preEvent ? state.preEvent.delta : 0,
+    event1: state.event1 ? state.event1.text : "", event1Delta: state.event1 ? state.event1.delta : 0,
+    path: p.name, pathWhy: state.pathWhy, pathExpect: state.pathExpect,
+    event2: state.event2 ? state.event2.text : "", event2Delta: state.event2 ? state.event2.delta : 0,
+    midEvent: state.midEvent ? state.midEvent.text : "", midEventDelta: state.midEvent ? state.midEvent.delta : 0,
+    dreamsBought: state.dreamChoices.filter(Boolean).map(d=>d.t).join("、"),
+    postEvent: state.postEvent ? state.postEvent.text : "", postEventDelta: state.postEvent ? state.postEvent.delta : 0,
+    finalBalance: balance(),
+    title: buildTitle(),
+    goalReflection: state.goalReflection || "",
+    thoughts: state.thoughts || "",
+  };
+  try{
+    fetch(SHEET_ENDPOINT, {
+      method: "POST", mode: "no-cors",
+      headers: {"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(payload),
+    }).catch(()=>{});
+  }catch(err){}
+  state.submitted = true;
+  renderFinal();
+}
+
+/* ---------------- NAV ---------------- */
+function updateBalanceBar(){
+  const bar = document.getElementById("balancebar");
+  if(state.step>=5){
+    bar.classList.remove("hidden");
+    document.getElementById("balanceNum").textContent = balance();
+    const names = {6:"命运卡",7:"加码区",8:"时间到",9:"买路径",10:"路径际遇",11:"路径际遇",12:"命运卡",13:"总积分",14:"买梦想",15:"命运卡",16:"结局"};
+    document.getElementById("stepNum").textContent = names[state.step] || "";
+  } else {
+    bar.classList.add("hidden");
+  }
+}
+function canProceed(){
+  switch(state.step){
+    case 0: return true;
+    case 1: return state.name.trim().length>0;
+    case 2: return state.family!==null;
+    case 3: return state.academic!==null;
+    case 4: return state.mbtiSkipped || !state.mbti.includes(null);
+    case 5: return true;
+    case 6: return !!state.preEvent;
+    case 7: return true;
+    case 8: return true;
+    case 9: return !!state.path && state.pathWhy.trim().length>0 && state.pathExpect.trim().length>0;
+    case 10: return !!state.event1;
+    case 11: return !!state.event2;
+    case 12: return !!state.midEvent;
+    case 13: return true;
+    case 14: return true;
+    case 15: return !!state.postEvent;
+    default: return true;
+  }
+}
+function updateNext(){ document.getElementById("nextBtn").disabled = !canProceed(); }
+
+function goTo(step){
+  steps.forEach((id,i)=>document.getElementById(id).classList.toggle("active", i===step));
+  state.step = step;
+  document.getElementById("backBtn").style.display = step===0 ? "none":"flex";
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.style.display = step===16 ? "none" : "block";
+  nextBtn.textContent = step===0 ? "开始" : (step===15 ? "完成，看看结局" : "下一步");
+
+  if(step===1) renderIntro();
+  if(step===2) renderFamily();
+  if(step===3) renderAcademic();
+  if(step===4) renderMbti();
+  if(step===5) renderPersonaSummary();
+  if(step===6) renderPrePath();
+  if(step===7) renderEarnZone();
+  if(step===9) renderPaths();
+  if(step===10) renderEvent(1);
+  if(step===11) renderEvent(2);
+  if(step===12) renderMidChoice();
+  if(step===13) renderTotalReveal();
+  if(step===14) renderDreamChoices();
+  if(step===15) renderPostDream();
+  if(step===16) renderFinal();
+
+  updateBalanceBar();
+  updateNext();
+  window.scrollTo(0,0);
+}
+
+document.getElementById("nextBtn").onclick = ()=>{
+  if(!canProceed()) return;
+  goTo(Math.min(16, state.step+1));
+};
+document.getElementById("backBtn").onclick = ()=>{ goTo(Math.max(0, state.step-1)); };
+
+goTo(0);
+</script>
+</body>
+</html>
